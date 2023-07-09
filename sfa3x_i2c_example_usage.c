@@ -35,6 +35,12 @@
 #include "sensirion_i2c_hal.h"
 #include "sfa3x_i2c.h"
 
+/*Para influxdb*/
+#include <curl/curl.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
 /*
  * TO USE CONSOLE OUTPUT (PRINTF) YOU MAY NEED TO ADAPT THE INCLUDE ABOVE OR
  * DEFINE IT ACCORDING TO YOUR PLATFORM:
@@ -68,24 +74,74 @@ int main(void) {
                error);
     }
 
-    for (;;) {
-        // Read Measurement
+    
+    // Read Measurement
 
-        float hcho;
-        float humidity;
-        float temperature;
+    float hcho;
+    float humiditySFA30;
+    float temperatureSFA30;
 
-        sensirion_i2c_hal_sleep_usec(500000);
+    sensirion_i2c_hal_sleep_usec(500000);
 
-        error = sfa3x_read_measured_values(&hcho, &humidity, &temperature);
+    error = sfa3x_read_measured_values(&hcho, &humiditySFA30, &temperatureSFA30);
 
-        if (error) {
-            printf("Error executing sfa3x_read_measured_values(): %i\n", error);
-        } else {
-            printf("Formaldehyde concentration: %.1f ppb\n", hcho);
-            printf("Relative humidity: %.2f %%RH\n", humidity);
-            printf("Temperature: %.2f °C\n", temperature);
+    if (error) {
+        printf("Error executing sfa3x_read_measured_values(): %i\n", error);
+    } else {
+        printf("Formaldehyde concentration: %.1f ppb\n", hcho);
+        printf("Relative humidity: %.2f %%RH\n", humiditySFA30);
+        printf("Temperature: %.2f °C\n", temperatureSFA30);
+    }
+    // Sample data, replace with the data you want to write to InfluxDB
+    char *data = malloc(3072);
+    char *tempStr = malloc(1024);
+    strcpy(data, "hchoSensor,sensor_id=iotSFA ");
+    sprintf(tempStr, "hcho_concentration=%.1f,", hcho);
+    strcat(data, tempStr);
+    sprintf(tempStr, "temperatureSFA30=%.2f,", temperatureSFA30);
+    strcat(data, tempStr);
+    sprintf(tempStr, "humiditySFA30=%.2f", humiditySFA30);
+    strcat(data, tempStr);
+    sprintf(tempStr, " %d", (int)time(NULL));
+    strcat(data, tempStr);
+
+
+
+    CURL *curl;
+    CURLcode res;
+    struct curl_slist *headers= NULL;
+    curl = curl_easy_init();
+    if (curl) {
+        // Replace localhost:8086, org, and bucket with your InfluxDB Server
+        // URL, Organization and Bucket.
+        curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8086/api/v2/write?org=UCO&bucket=DatosSensores&precision=s");
+        // Replace the API key
+        char* token_header =
+            "Authorization: Token sn84yiQpgwlBrTgogNVYZK7FuOltfOMng3Uhbyo1BH75A0yFk9a0WjtdtbOAQ0CvGkKt8nHQWQtOkxTAULfugw==";
+        headers = curl_slist_append(headers, token_header);
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        headers = curl_slist_append(headers, "Accept: application/json");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        headers = curl_slist_append(headers,
+                                    "Content-Type: text/plain; charset=utf-8");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+        /* Get size of the POST data */
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(data));
+
+        /* Pass in a pointer of data - libcurl will not copy */
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+
+        /* Perform the request, res will get the return code */
+        res = curl_easy_perform(curl);
+        /* Check for errors */
+        if (res != CURLE_OK) {
+            // fprintf(stderr, "curl_easy_perform() failed: %s\n",
+            // curl_easy_strerror(res));
         }
+
+        /* always cleanup */
+        curl_easy_cleanup(curl);
     }
 
     error = sfa3x_stop_measurement();
@@ -93,5 +149,5 @@ int main(void) {
         printf("Error executing sfa3x_stop_measurement(): %i\n", error);
     }
 
-    return 0;
+    return NO_ERROR;
 }
