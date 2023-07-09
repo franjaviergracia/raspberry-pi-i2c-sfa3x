@@ -117,7 +117,7 @@ int main(void) {
         curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8086/api/v2/write?org=UCO&bucket=DatosSensores&precision=s");
         // Replace the API key
         char* token_header =
-            "Authorization: Token sn84yiQpgwlBrTgogNVYZK7FuOltfOMng3Uhbyo1BH75A0yFk9a0WjtdtbOAQ0CvGkKt8nHQWQtOkxTAULfugw==";
+            "Authorization: Token vergasa==";
         headers = curl_slist_append(headers, token_header);
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         headers = curl_slist_append(headers, "Accept: application/json");
