@@ -54,7 +54,7 @@ int main(void) {
 
     error = sfa3x_device_reset();
     if (error) {
-        printf("Error resetting device: %i\n", error);
+        // printf("Error resetting device: %i\n", error);
         return -1;
     }
 
@@ -62,16 +62,15 @@ int main(void) {
     error =
         sfa3x_get_device_marking(&device_marking[0], sizeof(device_marking));
     if (error) {
-        printf("Error getting device marking: %i\n", error);
+        // printf("Error getting device marking: %i\n", error);
         return -1;
     }
-    printf("Device marking: %s\n", device_marking);
+    // printf("Device marking: %s\n", device_marking);
 
     // Start Measurement
     error = sfa3x_start_continuous_measurement();
     if (error) {
-        printf("Error executing sfa3x_start_continuous_measurement(): %i\n",
-               error);
+        // printf("Error executing sfa3x_start_continuous_measurement(): %i\n", error);
     }
 
     
@@ -86,11 +85,11 @@ int main(void) {
     error = sfa3x_read_measured_values(&hcho, &humiditySFA30, &temperatureSFA30);
 
     if (error) {
-        printf("Error executing sfa3x_read_measured_values(): %i\n", error);
+        // printf("Error executing sfa3x_read_measured_values(): %i\n", error);
     } else {
-        printf("Formaldehyde concentration: %.1f ppb\n", hcho);
-        printf("Relative humidity: %.2f %%RH\n", humiditySFA30);
-        printf("Temperature: %.2f °C\n", temperatureSFA30);
+        // printf("Formaldehyde concentration: %.1f ppb\n", hcho);
+        // printf("Relative humidity: %.2f %%RH\n", humiditySFA30);
+        // printf("Temperature: %.2f °C\n", temperatureSFA30);
     }
     // Sample data, replace with the data you want to write to InfluxDB
     char *data = malloc(3072);
@@ -117,7 +116,7 @@ int main(void) {
         curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8086/api/v2/write?org=UCO&bucket=DatosSensores&precision=s");
         // Replace the API key
         char* token_header =
-            "Authorization: Token vergasa==";
+            "Authorization: Token lIr1nhHEzcKHEt7K-f8vhLgE8HZvFPR46Yy9-MiOebN_0OClDNcZNTL6NyEna3uOd5_CCZpAXcJYn5pXSk8qig==";
         headers = curl_slist_append(headers, token_header);
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         headers = curl_slist_append(headers, "Accept: application/json");
@@ -146,7 +145,7 @@ int main(void) {
 
     error = sfa3x_stop_measurement();
     if (error) {
-        printf("Error executing sfa3x_stop_measurement(): %i\n", error);
+        // printf("Error executing sfa3x_stop_measurement(): %i\n", error);
     }
 
     return NO_ERROR;
