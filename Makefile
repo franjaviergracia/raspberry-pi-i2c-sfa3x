@@ -4,7 +4,11 @@ sfa3x_sources = sfa3x_i2c.h sfa3x_i2c.c
 
 i2c_implementation ?= sensirion_i2c_hal.c
 
+ENV_FILE = /home/javiergracia/sensorProgramms
+include $(ENV_FILE)/.env
+
 CFLAGS = -Os -Wall -fstrict-aliasing -Wstrict-aliasing=1 -Wsign-conversion -fPIC -I.
+CFLAGS += -DTOKEN_INFLUX=\"$(INFLUXDB_TOKEN)\"
 LCURL = -lcurl
 ifdef CI
     CFLAGS += -Werror
