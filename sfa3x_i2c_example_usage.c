@@ -70,30 +70,32 @@ int main(void) {
     // Start Measurement
     error = sfa3x_start_continuous_measurement();
     if (error) {
-        // printf("Error executing sfa3x_start_continuous_measurement(): %i\n", error);
+        // printf("Error executing sfa3x_start_continuous_measurement(): %i\n",
+        // error);
     }
-
-    
-    // Read Measurement
-
     float hcho;
     float humiditySFA30;
     float temperatureSFA30;
 
-    sensirion_i2c_hal_sleep_usec(500000);
+    for (int i = 0; i < 100; i++) {
+        // Read Measurement
 
-    error = sfa3x_read_measured_values(&hcho, &humiditySFA30, &temperatureSFA30);
+        sensirion_i2c_hal_sleep_usec(500000);
 
-    if (error) {
-        // printf("Error executing sfa3x_read_measured_values(): %i\n", error);
-    } else {
-        // printf("Formaldehyde concentration: %.1f ppb\n", hcho);
-        // printf("Relative humidity: %.2f %%RH\n", humiditySFA30);
-        // printf("Temperature: %.2f °C\n", temperatureSFA30);
+        error = sfa3x_read_measured_values(&hcho, &humiditySFA30,
+                                           &temperatureSFA30);
+
+        if (error) {
+            printf("Error executing sfa3x_read_measured_values(): %i\n", error);
+        } else {
+            printf("Formaldehyde concentration: %.1f ppb\n", hcho);
+            printf("Relative humidity: %.2f %%RH\n", humiditySFA30);
+            printf("Temperature: %.2f °C\n", temperatureSFA30);
+        }
     }
     // Sample data, replace with the data you want to write to InfluxDB
-    char *data = malloc(3072);
-    char *tempStr = malloc(1024);
+    char* data = malloc(3072);
+    char* tempStr = malloc(1024);
     strcpy(data, "hchoSensor,sensor_id=iotSFA ");
     sprintf(tempStr, "hcho_concentration=%.1f,", hcho);
     strcat(data, tempStr);
@@ -104,21 +106,22 @@ int main(void) {
     sprintf(tempStr, " %d", (int)time(NULL));
     strcat(data, tempStr);
 
-
-
-    CURL *curl;
+    CURL* curl;
     CURLcode res;
-    struct curl_slist *headers= NULL;
+    struct curl_slist* headers = NULL;
     curl = curl_easy_init();
     if (curl) {
         // Replace localhost:8086, org, and bucket with your InfluxDB Server
         // URL, Organization and Bucket.
-        curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:8086/api/v2/write?org=UCO&bucket=DatosSensores&precision=s");
+        curl_easy_setopt(curl, CURLOPT_URL,
+                         "http://localhost:8086/api/v2/"
+                         "write?org=UCO&bucket=DatosSensores&precision=s");
         // Replace the API key
-        char *token = TOKEN_INFLUX;
+        char* token = TOKEN_INFLUX;
         // Concatenar "Authorization: Token " con el token
-        char authorization_header[256]; 
-        snprintf(authorization_header, sizeof(authorization_header), "Authorization: Token %s", token);
+        char authorization_header[256];
+        snprintf(authorization_header, sizeof(authorization_header),
+                 "Authorization: Token %s", token);
 
         headers = curl_slist_append(headers, authorization_header);
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
